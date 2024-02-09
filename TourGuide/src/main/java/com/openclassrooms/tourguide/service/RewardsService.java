@@ -1,6 +1,7 @@
 package com.openclassrooms.tourguide.service;
 
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.springframework.stereotype.Service;
 
@@ -35,9 +36,18 @@ public class RewardsService {
 	public void setDefaultProximityBuffer() {
 		proximityBuffer = defaultProximityBuffer;
 	}
-	
+
+
+	/**
+	 * This method is used to calculate user rewards
+	 * We use CopyOnWriteArrayList to avoid the ConcurrentModificationException in the case of multithreading
+	 * for each location visited by the user, for each existing attraction, and depending on the distance between
+	 * the location visited and the attraction, if the user does not have the reward, it is added
+	 *
+	 * @param user
+	 */
 	public void calculateRewards(User user) {
-		List<VisitedLocation> userLocations = user.getVisitedLocations();
+		CopyOnWriteArrayList<VisitedLocation> userLocations = new CopyOnWriteArrayList<>(user.getVisitedLocations());
 		List<Attraction> attractions = gpsUtil.getAttractions();
 		
 		for(VisitedLocation visitedLocation : userLocations) {
