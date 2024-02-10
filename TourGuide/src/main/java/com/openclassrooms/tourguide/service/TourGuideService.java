@@ -1,5 +1,6 @@
 package com.openclassrooms.tourguide.service;
 
+import com.openclassrooms.tourguide.dto.NearAttractionDto;
 import com.openclassrooms.tourguide.helper.InternalTestHelper;
 import com.openclassrooms.tourguide.tracker.Tracker;
 import com.openclassrooms.tourguide.user.User;
@@ -7,14 +8,7 @@ import com.openclassrooms.tourguide.user.UserReward;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -42,7 +36,7 @@ public class TourGuideService {
 	public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
 		this.gpsUtil = gpsUtil;
 		this.rewardsService = rewardsService;
-		
+
 		Locale.setDefault(Locale.US);
 
 		if (testMode) {
@@ -95,15 +89,19 @@ public class TourGuideService {
 		return visitedLocation;
 	}
 
-	public List<Attraction> getNearByAttractions(VisitedLocation visitedLocation) {
+	/**
+	 * Get the closest five tourist attractions to the user, no matter how far away they are
+	 * @param visitedLocation -> the location of the user
+	 * @return a list of five attractions sorted by distance with the user location
+	 */
+	public List<NearAttractionDto> getNearByAttractions(VisitedLocation visitedLocation) {
 		List<Attraction> nearbyAttractions = new ArrayList<>();
-		for (Attraction attraction : gpsUtil.getAttractions()) {
-			if (rewardsService.isWithinAttractionProximity(attraction, visitedLocation.location)) {
-				nearbyAttractions.add(attraction);
-			}
-		}
+		return this.gpsUtil.getAttractions().stream()
+				.sorted(Comparator.comparingDouble(attraction -> this.rewardsService.getDistance(attraction,visitedLocation.location))) //
+				.limit(5)
+				.map(attraction -> this.createNearAttractionDto(attraction, visitedLocation))
+				.collect(Collectors.toList());
 
-		return nearbyAttractions;
 	}
 
 	private void addShutDownHook() {
@@ -159,6 +157,21 @@ public class TourGuideService {
 	private Date getRandomTime() {
 		LocalDateTime localDateTime = LocalDateTime.now().minusDays(new Random().nextInt(30));
 		return Date.from(localDateTime.toInstant(ZoneOffset.UTC));
+	}
+
+	/**
+	 * This method is used to create a nearAttractionDto
+	 * @param attraction
+	 * @param visitedLocation
+	 * @return a nearAttractionDtowhich includes the name of the attraction, its location, the user's location,
+	 * the distance between the attraction and the user's location, and the number of reward points
+	 */
+	private NearAttractionDto createNearAttractionDto(Attraction attraction, VisitedLocation visitedLocation){
+		return new NearAttractionDto(attraction.attractionName,
+				new Location(attraction.latitude, attraction.longitude),
+				visitedLocation.location, this.rewardsService.getDistance(attraction,visitedLocation.location),
+				this.rewardsService.getRewardPoints(attraction,visitedLocation.userId)
+		);
 	}
 
 }
