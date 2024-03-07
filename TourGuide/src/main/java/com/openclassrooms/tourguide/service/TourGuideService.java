@@ -9,6 +9,9 @@ import com.openclassrooms.tourguide.user.UserReward;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -31,6 +34,8 @@ public class TourGuideService {
 	private final RewardsService rewardsService;
 	private final TripPricer tripPricer = new TripPricer();
 	public final Tracker tracker;
+
+	public ExecutorService executorService = Executors.newFixedThreadPool(100);
 	boolean testMode = true;
 
 	public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
@@ -55,7 +60,7 @@ public class TourGuideService {
 
 	public VisitedLocation getUserLocation(User user) {
 		VisitedLocation visitedLocation = (user.getVisitedLocations().size() > 0) ? user.getLastVisitedLocation()
-				: trackUserLocation(user);
+				: trackUserLocationAsync(user).join();
 		return visitedLocation;
 	}
 
@@ -87,6 +92,16 @@ public class TourGuideService {
 		user.addToVisitedLocations(visitedLocation);
 		rewardsService.calculateRewards(user);
 		return visitedLocation;
+	}
+
+
+	/**
+	 * This method is used to call the trackerUserLocation method asynchronously for each user.
+	 * @param user
+	 * @return a completableFuture of VisitedLocation
+	 */
+	public CompletableFuture<VisitedLocation> trackUserLocationAsync(User user) {
+		return CompletableFuture.supplyAsync(() -> trackUserLocation(user), executorService);
 	}
 
 	/**
