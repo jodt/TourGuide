@@ -1,5 +1,7 @@
 package com.openclassrooms.tourguide.service;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -18,7 +20,7 @@ import com.openclassrooms.tourguide.user.User;
 import com.openclassrooms.tourguide.user.UserReward;
 
 @Service
-public class RewardsService {
+public class RewardsService implements Closeable {
     private static final double STATUTE_MILES_PER_NAUTICAL_MILE = 1.15077945;
 
 	// proximity in miles
@@ -97,4 +99,8 @@ public class RewardsService {
         return statuteMiles;
 	}
 
+	@Override
+	public void close() throws IOException {
+		executorService.shutdown();
+	}
 }

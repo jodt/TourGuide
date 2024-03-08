@@ -6,6 +6,8 @@ import com.openclassrooms.tourguide.tracker.Tracker;
 import com.openclassrooms.tourguide.user.User;
 import com.openclassrooms.tourguide.user.UserReward;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -28,7 +30,7 @@ import tripPricer.Provider;
 import tripPricer.TripPricer;
 
 @Service
-public class TourGuideService {
+public class TourGuideService implements Closeable {
 	private Logger logger = LoggerFactory.getLogger(TourGuideService.class);
 	private final GpsUtil gpsUtil;
 	private final RewardsService rewardsService;
@@ -188,4 +190,8 @@ public class TourGuideService {
 		);
 	}
 
+	@Override
+	public void close() throws IOException {
+		executorService.shutdown();
+	}
 }
