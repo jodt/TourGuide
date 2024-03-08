@@ -34,7 +34,6 @@ public class TourGuideService {
 	private final RewardsService rewardsService;
 	private final TripPricer tripPricer = new TripPricer();
 	public final Tracker tracker;
-
 	public ExecutorService executorService = Executors.newFixedThreadPool(100);
 	boolean testMode = true;
 
@@ -90,7 +89,7 @@ public class TourGuideService {
 	public VisitedLocation trackUserLocation(User user) {
 		VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
 		user.addToVisitedLocations(visitedLocation);
-		rewardsService.calculateRewards(user);
+		rewardsService.calculateRewardsAsync(user);
 		return visitedLocation;
 	}
 
