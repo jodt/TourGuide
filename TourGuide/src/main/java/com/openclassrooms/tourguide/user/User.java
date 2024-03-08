@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class User {
 	private final UUID userId;
@@ -70,7 +71,9 @@ public class User {
 	}
 	
 	public void addUserReward(UserReward userReward) {
-		if(userRewards.stream().filter(r -> r.attraction.attractionName.equals(userReward.attraction.attractionName)).count() == 0) {
+		//Use copyOnWriteArrayList on userRewards to avoid ConcurrentModificationException
+		CopyOnWriteArrayList<UserReward> userRewardsCopy = new CopyOnWriteArrayList<>(userRewards);
+		if(userRewardsCopy.stream().filter(r -> r.attraction.attractionName.equals(userReward.attraction.attractionName)).count() == 0) {
 			userRewards.add(userReward);
 		}
 	}
