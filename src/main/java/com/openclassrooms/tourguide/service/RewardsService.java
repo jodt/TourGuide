@@ -47,15 +47,13 @@ public class RewardsService implements Closeable {
 
 	/**
 	 * This method is used to calculate user rewards
-	 * We use CopyOnWriteArrayList to avoid the ConcurrentModificationException in the case of multithreading
 	 * for each location visited by the user, for each existing attraction, and depending on the distance between
 	 * the location visited and the attraction, if the user does not have the reward, it is added
 	 *
 	 * @param user
 	 */
 	public void calculateRewards(User user) {
-		//Use copyOnWriteArrayList on userLocations to avoid ConcurrentModificationException
-		CopyOnWriteArrayList<VisitedLocation> userLocations = new CopyOnWriteArrayList<>(user.getVisitedLocations());
+		List<VisitedLocation> userLocations = user.getVisitedLocations();
 		List<Attraction> attractions = gpsUtil.getAttractions();
 		
 		for(VisitedLocation visitedLocation : userLocations) {
